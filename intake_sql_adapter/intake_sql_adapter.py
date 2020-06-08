@@ -46,7 +46,7 @@ class SQLTable(base.DataSource):
         return base.Schema(datashape=None,
                            dtype=self._dataframe,
                            shape=(None, len(self._dataframe.columns)),
-                           npartitions=self._dataframe.npartitions,
+                           npartitions=0,
                            extra_metadata={})
 
     def read(self):
