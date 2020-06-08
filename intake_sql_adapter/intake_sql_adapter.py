@@ -29,6 +29,7 @@ class SQLTable(base.DataSource):
 
         self._uri = uri
         self._sql_table = sql_table
+        self._sql_expr = "select top 100 * from {}".format(sql_table)
         self._sql_kwargs = sql_kwargs
         self._dataframe = None
 
