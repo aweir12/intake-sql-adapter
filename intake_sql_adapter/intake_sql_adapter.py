@@ -34,6 +34,25 @@ class SQLTable(base.DataSource):
 
         super(SQLTable, self).__init__(metadata=metadata)
 
+    def _load(self):
+        import pandas as pd
+        sql_query = "select top 100 * from {}".format(self._sql_table)
+        loader = pd.read_sql
+        self._dataframe = loader(sql_query, self._uri, **self._sql_kwargs)
+
+    def _get_schema(self):
+        if self._dataframe is None:
+            self._load()
+        return base.Schema(datashape=None,
+                           dtype=self._dataframe,
+                           shape=(None, len(self._dataframe.columns)),
+                           npartitions=self._dataframe.npartitions,
+                           extra_metadata={})
 
     def read(self):
-        return "Hello World"
+        self._get_schema()
+        return self._dataframe.compute()
+    
+
+    def _close(self):
+        self._dataframe = None
