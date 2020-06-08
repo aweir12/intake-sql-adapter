@@ -31,9 +31,9 @@ class SQLTable(base.DataSource):
         self._uri = uri
         self._sql_table = sql_table
         self._sql_kwargs = sql_kwargs
-        self._where_clause = None
+        self._where_clause = "blank"
         self._num_rows = 100
-        self._sql_statement = None
+        self._sql_statement = "blank"
         self._dataframe = None
 
         super(SQLTable, self).__init__(metadata=None)
