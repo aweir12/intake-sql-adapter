@@ -61,7 +61,8 @@ class SQLTable(base.DataSource):
         if top_n != 100:
           self._sql_expr = "select top {} from {}".format(top_n, self._sql_table)
         else:
-          self._sql_expr = "select top 100 * from {}".format(self._sql_table)    
+          self._sql_expr = "select top 100 * from {}".format(self._sql_table)
+        return None
 
     def read(self):
         return self._get_partition(None)
