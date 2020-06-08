@@ -63,7 +63,9 @@ class SQLTable(base.DataSource):
         return self._dataframe
 
 
-    def read(self, where_clause = None, num_rows = 100):
+    def read(self):
+        num_rows = 100
+        where_clause = None
         self._num_rows = num_rows
         if where_clause == None:
             self._sql_statement = 'select top {} * from {}'.format(self._num_rows, self._sql_table)
