@@ -19,6 +19,7 @@ class SQLTable(base.DataSource):
     container = 'dataframe'
     partition_access = True
 
+
     def __init__(self, uri, sql_table, sql_kwargs={}, metadata={}):
         self._init_args = {
             'uri': uri,
@@ -39,20 +40,20 @@ class SQLTable(base.DataSource):
         sql_query = "select top 100 * from {}".format(self._sql_table)
         loader = pd.read_sql
         self._dataframe = loader(sql_query, self._uri, **self._sql_kwargs)
-
+    
     def _get_schema(self):
         if self._dataframe is None:
             self._load()
         return base.Schema(datashape=None,
-                           dtype=self._dataframe,
-                           shape=(None, len(self._dataframe.columns)),
-                           npartitions=0,
+                           dtype={idx : str(val) for idx, val in self._dataframe.dtypes.items()},
+                           shape=self._dataframe.shape,
+                           npartitions=1,
                            extra_metadata={})
 
-    def read(self):
-        self._get_schema()
-        return self._dataframe.compute()
-    
+    def _get_partition(self, _):
+        if self._dataframe is None:
+            self._load_metadata()
+        return self._dataframe
 
-    def _close(self):
-        self._dataframe = None
+    def read(self):
+        return self._get_partition(None)
