@@ -36,14 +36,16 @@ class SQLTable(base.DataSource):
 
     def _load(self):
         import pandas as pd
-        loader = pd.read_sql
+        loader = pd.read_sql_table if self._sql_kwargs.get("schema") else pd.read_sql
         self._dataframe = loader(self._sql_expr, self._uri, **self._sql_kwargs)
 
     def _get_schema(self):
         if self._dataframe is None:
+            # TODO: could do read_sql with chunksize to get likely schema from
+            # first few records, rather than loading the whole thing
             self._load()
         return base.Schema(datashape=None,
-                           dtype=self._dataframe.dtypes,
+                           dtype={idx : str(val) for idx, val in self._dataframe.dtypes.items()},
                            shape=self._dataframe.shape,
                            npartitions=1,
                            extra_metadata={})
