@@ -57,8 +57,11 @@ class SQLTable(base.DataSource):
             self._load_metadata()
         return self._dataframe
 
-    def read(self):
-        self._sql_expr = "select top 100 * from {}".format(self._sql_table)
+    def read(self, top_n = 100):
+        if top_n != 100:
+            self._sql_expr = "select top {} from {}".format(top_n, self._sql_table)
+        else:
+            self._sql_expr = "select top 100 * from {}".format(self._sql_table)
         return self._get_partition(None)
 
     def _close(self):
