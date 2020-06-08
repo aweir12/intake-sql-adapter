@@ -31,18 +31,24 @@ class SQLTable(base.DataSource):
         self._uri = uri
         self._sql_table = sql_table
         self._sql_kwargs = sql_kwargs
+        self._where_clause = None
+        self._num_rows = 100
+        self._sql_statement = None
         self._dataframe = None
 
         super(SQLTable, self).__init__(metadata=metadata)
 
+
     def _load(self):
         import pandas as pd
-        sql_query = "select top 100 * from {}".format(self._sql_table)
         loader = pd.read_sql
-        self._dataframe = loader(sql_query, self._uri, **self._sql_kwargs)
-    
+        self._dataframe = loader(self._sql_statement, self._uri, **self._sql_kwargs)
+
+
     def _get_schema(self):
         if self._dataframe is None:
+            # TODO: could do read_sql with chunksize to get likely schema from
+            # first few records, rather than loading the whole thing
             self._load()
         return base.Schema(datashape=None,
                            dtype={idx : str(val) for idx, val in self._dataframe.dtypes.items()},
@@ -50,10 +56,19 @@ class SQLTable(base.DataSource):
                            npartitions=1,
                            extra_metadata={})
 
+
     def _get_partition(self, _):
         if self._dataframe is None:
             self._load_metadata()
         return self._dataframe
 
-    def read(self):
+
+    def read(self, where_clause = None, num_rows = 100):
+        self._num_rows = num_rows
+        if where_clause == None:
+            self._sql_statement = 'select top {} * from {}'.format(self._num_rows, self._sql_table)
+        else:
+            self._sql_statement = 'select top {} * from {} where {}'.format(self._num_rows, self._sql_table, where_clause)
+        
         return self._get_partition(None)
+        
