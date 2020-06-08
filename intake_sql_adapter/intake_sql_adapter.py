@@ -1,16 +1,15 @@
 from intake.source import base
 from . import __version__
 
-
 class SQLTable(base.DataSource):
     """
-    One-shot SQL to dataframe reader (no partitioning)
-    Caches entire dataframe in memory.
+    Docstring goes here!
+
     Parameters
     ----------
     uri: str or None
         Full connection string in sqlalchemy syntax
-    sql_expr: str
+    sql_table: str
         Query expression to pass to the DB backend
     sql_kwargs: dict
         Further arguments to pass to pandas.read_sql
@@ -20,25 +19,31 @@ class SQLTable(base.DataSource):
     container = 'dataframe'
     partition_access = True
 
-    def __init__(self, uri, sql_expr, sql_kwargs={}, metadata={}):
+
+    def __init__(self, uri, sql_table, sql_kwargs={}, metadata={}):
         self._init_args = {
             'uri': uri,
-            'sql_expr': sql_expr,
+            'sql_table': sql_table,
             'sql_kwargs': sql_kwargs,
             'metadata': metadata,
         }
 
         self._uri = uri
-        self._sql_expr = sql_expr
+        self._sql_table = sql_table
         self._sql_kwargs = sql_kwargs
+        self._where_clause = None
+        self._num_rows = 100
+        self._sql_statement = None
         self._dataframe = None
 
-        super(SQLTable, self).__init__(metadata=metadata)
+        super(SQLTable, self).__init__(metadata=None)
+
 
     def _load(self):
         import pandas as pd
-        loader = pd.read_sql_table if self._sql_kwargs.get("schema") else pd.read_sql
-        self._dataframe = loader(self._sql_expr, self._uri, **self._sql_kwargs)
+        loader = pd.read_sql
+        self._dataframe = loader(self._sql_statement, self._uri, **self._sql_kwargs)
+
 
     def _get_schema(self):
         if self._dataframe is None:
@@ -51,13 +56,22 @@ class SQLTable(base.DataSource):
                            npartitions=1,
                            extra_metadata={})
 
+
     def _get_partition(self, _):
         if self._dataframe is None:
             self._load_metadata()
         return self._dataframe
 
-    def read(self):
+
+    def read(self, where_clause = None, num_rows = 100):
+        self._num_rows = num_rows
+        if where_clause == None:
+            self._sql_statement = 'select top {} * from {}'.format(self._num_rows, self._sql_table)
+        else:
+            self._sql_statement = 'select top {} * from {} where {}'.format(self._num_rows, self._sql_table, where_clause)
+        
         return self._get_partition(None)
 
     def _close(self):
-        self._dataframe = None
+        # close any files, sockets, etc
+        pass
