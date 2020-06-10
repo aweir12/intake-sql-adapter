@@ -3,14 +3,18 @@ from . import __version__
 
 class SQLTable(base.DataSource):
     """
-    One-shot SQL to dataframe reader (no partitioning)
-    Caches entire dataframe in memory.
+    Class to query a single SQL table or view.
+
     Parameters
     ----------
     uri: str or None
         Full connection string in sqlalchemy syntax
-    sql_expr: str
-        Query expression to pass to the DB backend
+    sql_table: str
+        Table or view to query
+    sql_num_rows: int
+        Number of rows to return from sql query
+    sql_where_clause: str
+        where clause of SQL statement to be passed
     sql_kwargs: dict
         Further arguments to pass to pandas.read_sql
     """
@@ -19,12 +23,12 @@ class SQLTable(base.DataSource):
     container = 'dataframe'
     partition_access = True
 
-    def __init__(self, uri, sql_table, num_rows = 100, where_clause = "1=1", sql_kwargs={}, metadata={}):
+    def __init__(self, uri, sql_table, sql_num_rows = 100, sql_where_clause = "1=1", sql_kwargs={}, metadata={}):
         self._init_args = {
             'uri': uri,
             'sql_table': sql_table,
-            'num_rows': num_rows,
-            'where_clause' : where_clause,
+            'sql_num_rows': sql_num_rows,
+            'sql_where_clause' : sql_where_clause,
             'sql_kwargs': sql_kwargs,
             'metadata': metadata,
         }
@@ -32,8 +36,8 @@ class SQLTable(base.DataSource):
         self._uri = uri
         self._sql_table = sql_table
         self._sql_expr = "select top {} * from {} where {}".format(num_rows, sql_table, where_clause)
-        self._num_rows = num_rows
-        self._where_clause = where_clause
+        self._sql_num_rows = num_rows
+        self._sql_where_clause = sql_where_clause
         self._sql_kwargs = sql_kwargs
         self._dataframe = None
 
@@ -41,14 +45,11 @@ class SQLTable(base.DataSource):
 
     def _load(self):
         import pandas as pd
-        #loader = pd.read_sql_table if self._sql_kwargs.get("schema") else pd.read_sql
         loader = pd.read_sql
         self._dataframe = loader(self._sql_expr, self._uri, **self._sql_kwargs)
 
     def _get_schema(self):
         if self._dataframe is None:
-            # TODO: could do read_sql with chunksize to get likely schema from
-            # first few records, rather than loading the whole thing
             self._load()
         return base.Schema(datashape=None,
                            dtype={idx : str(val) for idx, val in self._dataframe.dtypes.items()},
