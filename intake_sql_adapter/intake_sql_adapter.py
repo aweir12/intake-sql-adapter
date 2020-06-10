@@ -35,7 +35,7 @@ class SQLTable(base.DataSource):
 
         self._uri = uri
         self._sql_table = sql_table
-        self._sql_expr = "select top {} * from {} where {}".format(sql_num_rows, sql_table, where_clause)
+        self._sql_expr = "select top {} * from {} where {}".format(sql_num_rows, sql_table, sql_where_clause)
         self._sql_num_rows = sql_num_rows
         self._sql_where_clause = sql_where_clause
         self._sql_kwargs = sql_kwargs
