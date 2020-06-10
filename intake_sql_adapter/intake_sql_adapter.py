@@ -19,11 +19,12 @@ class SQLTable(base.DataSource):
     container = 'dataframe'
     partition_access = True
 
-    def __init__(self, uri, sql_table, num_rows = 100, sql_kwargs={}, metadata={}):
+    def __init__(self, uri, sql_table, num_rows = 100, where_clause = "1=1", sql_kwargs={}, metadata={}):
         self._init_args = {
             'uri': uri,
             'sql_table': sql_table,
             'num_rows': num_rows,
+            'where_clause' : where_clause,
             'sql_kwargs': sql_kwargs,
             'metadata': metadata,
         }
@@ -32,6 +33,7 @@ class SQLTable(base.DataSource):
         self._sql_table = sql_table
         self._sql_expr = "select top {} * from {}".format(num_rows, sql_table)
         self._num_rows = num_rows
+        self._where_clause = where_clause
         self._sql_kwargs = sql_kwargs
         self._dataframe = None
 
@@ -59,7 +61,8 @@ class SQLTable(base.DataSource):
             self._load_metadata()
         return self._dataframe
 
-    def read(self, top_n = 100):
+    def read(self):
+        self._sql_expr = "{} {}".format(self._sql_expr, self._where_clause)
         return self._get_partition(None)
 
     def _close(self):
