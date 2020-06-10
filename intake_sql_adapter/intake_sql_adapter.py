@@ -64,7 +64,7 @@ class SQLTable(base.DataSource):
           self._sql_expr = "select top 100 * from {}".format(self._sql_table)
         return None
 
-    def read(self):
+    def read(self, top_n = 100):
         return self._get_partition(None)
 
     def _close(self):
