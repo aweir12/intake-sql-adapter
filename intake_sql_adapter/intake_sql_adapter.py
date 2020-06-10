@@ -31,7 +31,7 @@ class SQLTable(base.DataSource):
 
         self._uri = uri
         self._sql_table = sql_table
-        self._sql_expr = "select top {} * from {}".format(num_rows, sql_table)
+        self._sql_expr = "select top {} * from {}".format(num_rows, sql_table, where_clause)
         self._num_rows = num_rows
         self._where_clause = where_clause
         self._sql_kwargs = sql_kwargs
@@ -62,7 +62,6 @@ class SQLTable(base.DataSource):
         return self._dataframe
 
     def read(self):
-        self._sql_expr = "{} {}".format(self._sql_expr, self._where_clause)
         return self._get_partition(None)
 
     def _close(self):
