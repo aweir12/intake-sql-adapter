@@ -19,7 +19,7 @@ class SQLTable(base.DataSource):
     container = 'dataframe'
     partition_access = True
 
-    def __init__(self, uri, sql_table, num_rows, sql_kwargs={}, metadata={}):
+    def __init__(self, uri, sql_table, num_rows = 100, sql_kwargs={}, metadata={}):
         self._init_args = {
             'uri': uri,
             'sql_table': sql_table,
